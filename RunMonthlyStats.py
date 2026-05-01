@@ -102,6 +102,31 @@ def move_if_exists(source, destination):
         shutil.move(str(source), str(destination))
 
 
+def stats_file_has_rows(path):
+    if not path.exists():
+        return False
+
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        parts = [part.strip() for part in line.split("|")]
+        if len(parts) > 2 and parts[1].isdigit():
+            return True
+    return False
+
+
+def remove_monotype_staging_files(root, format_id, teamtype):
+    source_prefix = f"{format_id}-{teamtype}-0"
+    for path in [
+        root / "Stats" / f"{source_prefix}.txt",
+        root / "Stats" / "chaos" / f"{source_prefix}.json",
+        root / "Stats" / "leads" / f"{source_prefix}.txt",
+        root / "Stats" / "metagame" / f"{source_prefix}.txt",
+        root / "Stats" / "movesets" / f"{source_prefix}.txt",
+        root / "Stats" / "movesets" / f"{source_prefix}.json",
+        root / "Stats" / "movesets" / f"{source_prefix}_calc.txt",
+    ]:
+        remove(path)
+
+
 def remove_empty_dirs(path):
     if not path.exists():
         return
@@ -205,6 +230,9 @@ def main():
             for tag in MONOTYPE_TAGS:
                 print(f"Writing monotype stats: {month}/{tag}", flush=True)
                 run([args.python, "StatCounter.py", format_id, "0", tag])
+                if not stats_file_has_rows(root / "Stats" / f"{format_id}-{tag}-0.txt"):
+                    remove_monotype_staging_files(root, format_id, tag)
+                    continue
                 run([args.python, "batchMovesetCounter.py", format_id, "0", tag])
                 publish_monotype_stats(root, month, format_id, tag)
 

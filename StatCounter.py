@@ -85,6 +85,37 @@ stallCounter = []
 ratingCounter = []
 weightCounter = []
 WLratings = {'win':[],'loss':[]}
+weatherTags = {
+	'sun', 'rain', 'hail', 'bloodmoon', 'fog',
+	'sand', 'dust', 'pollen', 'pheromones', 'smog', 'fairydust',
+	'battleaura', 'pactivity', 'dreamscape', 'dragonforce', 'thunderstorm', 'magnetosphere',
+	'strongwinds', 'allweather', 'multiweather', 'weatherless',
+	'tricksun', 'trickrain', 'trickhail', 'trickbloodmoon', 'trickfog',
+	'tricksand', 'trickdust', 'trickpollen', 'trickpheromones', 'tricksmog', 'trickfairydust',
+	'trickbattleaura', 'trickpactivity', 'trickdreamscape', 'trickdragonforce', 'trickthunderstorm',
+	'trickmagnetosphere', 'trickstrongwinds',
+	'sunoffense', 'rainoffense', 'hailoffense', 'bloodmoonoffense', 'fogoffense',
+	'sandoffense', 'dustoffense', 'pollenoffense', 'pheromonesoffense', 'smogoffense',
+	'fairydustoffense', 'battleauraoffense', 'pactivityoffense', 'dreamscapeoffense',
+	'dragonforceoffense', 'thunderstormoffense', 'magnetosphereoffense', 'strongwindsoffense',
+	'sunstall', 'rainstall', 'hailstall', 'bloodmoonstall', 'fogstall',
+	'sandstall', 'duststall', 'pollenstall', 'pheromonesstall', 'smogstall',
+	'fairyduststall', 'battleaurastall', 'pactivitystall', 'dreamscapestall',
+	'dragonforcestall', 'thunderstormstall', 'magnetospherestall', 'strongwindsstall',
+	'sandfear', 'hailfear',
+}
+
+def writeTagTable(metagamefile, title, tags, totalWeight):
+	if not tags:
+		return
+	metagamefile.write(title+'\n')
+	for i in range(0,len(tags)):
+		line = ' '+tags[i][0]
+		for j in range(len(tags[i][0]),30):
+			line = line + '.'
+		line = line + '%8.5f%%' % (100.0*tags[i][1]/max(1.0,totalWeight))
+		metagamefile.write(line+'\n')
+	metagamefile.write('\n')
 
 t=tier
 if tier.endswith('suspecttest'):
@@ -331,18 +362,18 @@ if t not in nonSinglesFormats and t not in ['1v1','challengecup1vs1']: #lead sta
 
 #metagame analysis
 if metagamefile:
-	tags = []
+	teamTags = []
+	weather = []
 	for tag in tagCounter:
-		tags.append([tag,tagCounter[tag]])
-	tags=sorted(tags, key=lambda tags:-tags[1])
+		if tag in weatherTags:
+			weather.append([tag,tagCounter[tag]])
+		else:
+			teamTags.append([tag,tagCounter[tag]])
+	teamTags=sorted(teamTags, key=lambda tags:-tags[1])
+	weather=sorted(weather, key=lambda tags:-tags[1])
 
-	for i in range(0,len(tags)):
-		line = ' '+tags[i][0]
-		for j in range(len(tags[i][0]),30):
-			line = line + '.'
-		line = line + '%8.5f%%' % (100.0*tags[i][1]/max(1.0,total['weighted']))
-		metagamefile.write(line+'\n')
-	metagamefile.write('\n')
+	writeTagTable(metagamefile, 'Team types', teamTags, total['weighted'])
+	writeTagTable(metagamefile, 'Weather', weather, total['weighted'])
 
 	#stalliness
 	stallCounter=sorted(stallCounter, key=lambda stallCounter:stallCounter[0])

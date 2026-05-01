@@ -173,8 +173,9 @@ def movesetCounter(filename, cutoff, teamtype, usage, movesetsfile):
 		'Spreads': spreads,
 		'Moves': moves,
 		'Happiness' : happinesses,
-		'Teammates': teammates,
-		'Checks and Counters': cc}
+		'Teammates': teammates}
+	if cc:
+		stuff['Checks and Counters'] = cc
 
 	#print tables
 	tablewidth = 40
@@ -230,6 +231,8 @@ def movesetCounter(filename, cutoff, teamtype, usage, movesetsfile):
 
 
 	for x in ['Abilities','Items','Spreads','Moves','Teammates','Checks and Counters']:
+		if x not in stuff:
+			continue
 		table = []
 		line = ' | '+x
 		while len(line) < tablewidth+2:
