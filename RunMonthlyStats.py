@@ -68,7 +68,7 @@ def reset_generated_workspace(root, python):
         remove(stats / dirname)
 
     for path in stats.iterdir():
-        if path.is_dir() and not MONTH_DIR_RE.match(path.name):
+        if path.is_dir() and path.name != "ratings" and not MONTH_DIR_RE.match(path.name):
             remove(path)
 
     ratings = stats / "ratings"
@@ -112,6 +112,12 @@ def remove_empty_dirs(path):
 
     if path.is_dir() and not any(path.iterdir()):
         path.rmdir()
+
+
+def remove_empty_staging_dirs(root):
+    stats = root / "Stats"
+    for dirname in ["chaos", "leads", "metagame", "moveset", "movesets", "monotype"]:
+        remove_empty_dirs(stats / dirname)
 
 
 def publish_format_stats(root, month, format_id):
@@ -203,6 +209,7 @@ def main():
                 publish_monotype_stats(root, month, format_id, tag)
 
         remove_empty_dirs(root / "Stats" / month)
+        remove_empty_staging_dirs(root)
 
 
 if __name__ == "__main__":
