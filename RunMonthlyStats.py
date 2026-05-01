@@ -4,6 +4,7 @@ import argparse
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -142,7 +143,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate monthly usage stats for every logged format.")
     parser.add_argument("--log-root", default="../kaskade-showdown/logs")
     parser.add_argument("--months", nargs="*", default=[])
-    parser.add_argument("--python", default="python")
+    parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--node", default="node")
     parser.add_argument(
         "--no-ratings",
