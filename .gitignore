@@ -1,3 +1,5 @@
+__pycache__/
+ladderdev/__pycache__/
 logs/
 Stats/
 Raw/

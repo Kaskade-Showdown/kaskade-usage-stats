@@ -36,15 +36,13 @@ def resolveRatingsPaths(arg):
 		json_path = text_path[:-4] + ".json"
 	elif arg.endswith('.json'):
 		json_path = arg
-		base = os.path.basename(arg)
-		text_name = base[:-5] + ".txt"
-		text_path = os.path.join("Stats", text_name)
+		text_path = arg[:-5] + ".txt"
 	else:
 		json_path = arg + ".json"
 		text_path = os.path.join("Stats", arg + ".txt")
 	return (json_path, text_path)
 
-def getTeamsFromLog(log,mrayAllowed):
+def getTeamsFromLog(log,mrayAllowed,filename):
 	teams={}
 	for team in ['p1team','p2team']:
 
@@ -247,7 +245,7 @@ def LogReader(filename,tier,movesets,ratings):
 				#gxe = round(10000 / (1 + pow(10.0,(((1500 - rpr)) * math.pi / math.sqrt(3 * pow(math.log(10.0),2.0) * pow(rprd,2.0) + 2500 * (64 * pow(math.pi,2.0) + 147 * pow(math.log(10.0),2))))))) / 100
 				#acre= rpr-1.4079126393*rprd
 				#not used: 'w','l','t','sigma','rptime','rpsigma','lacre','oldacre','oldrdacre'	
-	else:
+	elif ratings is not False:
 		if not isRatedBattle(log):
 			return False
 		for player in [log['p1'],log['p2']]:
@@ -263,7 +261,7 @@ def LogReader(filename,tier,movesets,ratings):
 			rating[player[1]]={'r':r,'rd':rd,'rpr':rpr,'rprd':rprd}
 
 	#get pokemon info
-	teams = getTeamsFromLog(log,mrayAllowed)
+	teams = getTeamsFromLog(log,mrayAllowed,filename)
 	if teams == False:
 		sys.stderr.write('Skipping log:\n'+filename+'\n')
 		return False
@@ -566,7 +564,7 @@ def LogReader(filename,tier,movesets,ratings):
 									break
 							if not tryAgain:
 								sys.stderr.write("Nick not found.\n")
-								sys.stderr.write("In file: "+argv[1]+"\n")
+								sys.stderr.write("In file: "+filename+"\n")
 								sys.stderr.write(line[6+3*spacelog:]+"\n")
 								sys.stderr.write(str(nicks)+"\n")
 								return False
@@ -818,16 +816,15 @@ def LogReader(filename,tier,movesets,ratings):
 						sys.stderr.write('(Pokemon not in ts) (1)\n')
 						sys.stderr.write(str([ts[0][0],species])+'\n')
 						return False
-				finally:
-					if parsed_line[2].startswith('p1a'):
-						active[0] = activeIndex
-					elif parsed_line[2].startswith('p2a'):
-						active[1] = activeIndex
-					elif parsed_line[2].startswith('p1b'):
-						active[2] = activeIndex
-					elif parsed_line[2].startswith('p2b'):
-						active[3] = activeIndex
-						break
+				if parsed_line[2].startswith('p1a'):
+					active[0] = activeIndex
+				elif parsed_line[2].startswith('p2a'):
+					active[1] = activeIndex
+				elif parsed_line[2].startswith('p1b'):
+					active[2] = activeIndex
+				elif parsed_line[2].startswith('p2b'):
+					active[3] = activeIndex
+					break
 
 		start=log['log'].index(line)+1
 
@@ -932,7 +929,7 @@ def LogReader(filename,tier,movesets,ratings):
 									break
 							if not tryAgain:
 								sys.stderr.write("Nick not found.\n")
-								sys.stderr.write("In file: "+argv[1]+"\n")
+								sys.stderr.write("In file: "+filename+"\n")
 								sys.stderr.write(line[6+3*spacelog:]+"\n")
 								sys.stderr.write(str(nicks)+"\n")
 								return False
@@ -1147,7 +1144,7 @@ def LogReader(filename,tier,movesets,ratings):
 		i = i+1
 		if i>=len(ts):
 			sys.stderr.write("Something's wrong here.\n")
-			sys.stderr.write("In file: "+argv[1]+"\n")
+			sys.stderr.write("In file: "+filename+"\n")
 			sys.stderr.write(str(ts)+"\n")
 			return False
 
@@ -1196,7 +1193,11 @@ def main(argv):
 	ratings_file = "ratings.json"
 	ratings_text_file = "Stats/ratings.txt"
 	ratings = {}
-	if len(argv) > 3:
+	write_ratings = True
+	if len(argv) > 3 and argv[3] == "--no-ratings":
+		ratings = False
+		write_ratings = False
+	elif len(argv) > 3:
 		ratings_file, ratings_text_file = resolveRatingsPaths(argv[3])
 		try:
 			ratings = json.loads(open(ratings_file).readline())
@@ -1246,7 +1247,10 @@ def main(argv):
 				writeme = []
 				movesets={}
 	if count == 0:
-		sys.stderr.write('No valid rated battles found in '+argv[1]+'\n')
+		if write_ratings:
+			sys.stderr.write('No valid rated battles found in '+argv[1]+'\n')
+		else:
+			sys.stderr.write('No valid battles found in '+argv[1]+'\n')
 	if writeme:
 		outname = "Raw/"+tier#+".txt"
 		outfile=gzip.open(outname,'at')
@@ -1264,16 +1268,17 @@ def main(argv):
 			msfile.write(json.dumps(movesets[species]))
 			msfile.close()
 
-	d = os.path.dirname(ratings_file)
-	if d and not os.path.exists(d):
-		os.makedirs(d)
-	ratingfile=open(ratings_file,'w+')
-	ratingfile.write(json.dumps(ratings))
-	ratingfile.close()
-	d = os.path.dirname(ratings_text_file)
-	if d and not os.path.exists(d):
-		os.makedirs(d)
-	Glicko.write(ratings, ratings_text_file)
+	if write_ratings:
+		d = os.path.dirname(ratings_file)
+		if d and not os.path.exists(d):
+			os.makedirs(d)
+		ratingfile=open(ratings_file,'w+')
+		ratingfile.write(json.dumps(ratings))
+		ratingfile.close()
+		d = os.path.dirname(ratings_text_file)
+		if d and not os.path.exists(d):
+			os.makedirs(d)
+		Glicko.write(ratings, ratings_text_file)
 
 if __name__ == "__main__":
     main(sys.argv)
