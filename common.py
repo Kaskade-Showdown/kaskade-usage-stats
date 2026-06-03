@@ -57,12 +57,12 @@ def _eval_js(js_code):
 	return result.stdout.strip()
 
 def getFormats():
-	js = urllib.request.urlopen("https://raw.githubusercontent.com/ry4242/kaskade-showdown/master/config/formats.js").read().decode('utf-8')
+	js = urllib.request.urlopen("https://raw.githubusercontent.com/Kaskade-Showdown/kaskade-showdown/master/config/formats.js").read().decode('utf-8')
 	print('Updating tiers')
 	return json.loads(_eval_js('exports={},' + js + 'process.stdout.write(JSON.stringify(exports.Formats))'))
 
 def getBattleFormatsData():
-	js = urllib.request.urlopen("https://raw.githubusercontent.com/ry4242/kaskade-showdown/master/data/formats-data.js").read().decode('utf-8')
+	js = urllib.request.urlopen("https://raw.githubusercontent.com/Kaskade-Showdown/kaskade-showdown/master/data/formats-data.js").read().decode('utf-8')
 	print('Updating tiers')
 	return json.loads(_eval_js('exports={},' + js + 'process.stdout.write(JSON.stringify(exports.BattleFormatsData))'))
 
